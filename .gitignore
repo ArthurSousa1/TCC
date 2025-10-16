@@ -3,6 +3,3 @@ venv/
 
 bertimbau_results/
 bertimbau_test_predictions_results.csv
-
-longformer_results/
-longformer_test_predictions_results.csv
