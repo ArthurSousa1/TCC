@@ -1,0 +1,5 @@
+venv/
+.venv/
+
+bertimbau_results/
+bertimbau_test_predictions_results.csv
