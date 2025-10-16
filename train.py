@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import BertTokenizer, BertModel, TrainingArguments, Trainer
+from torch.utils.data import Dataset
+# Usamos AutoModel e AutoTokenizer para lidar com o Longformer de forma flexível
+from transformers import AutoTokenizer, AutoModel, TrainingArguments, Trainer
 from sklearn.metrics import mean_squared_error
 import os
 import warnings
@@ -11,11 +12,18 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # --- 1. Configurações ---
-MODEL_NAME = "neuralmind/bert-base-portuguese-cased"
+# MODELO: Longformer Base com 4096 tokens (Pré-treinado em Inglês/Multilíngue)
+MODEL_NAME = "allenai/longformer-base-4096" 
 TARGETS = ['formal_register', 'thematic_coherence', 'narrative_rhetorical_structure', 'cohesion']
-MAX_LEN = 512 # Limite de tokens para o BERT (combinação essay + prompt)
-EPOCHS = 3    # Número de épocas de treinamento (você pode ajustar)
-BATCH_SIZE = 8 # Tamanho do batch (ajuste conforme a memória da sua GPU)
+
+# AUMENTO DO CONTEXTO: O Longformer suporta até 4096 tokens
+MAX_LEN = 4096 
+EPOCHS = 3    # Número de épocas de treinamento (ajuste conforme o tempo disponível)
+
+# ATENÇÃO: Reduzir drasticamente o BATCH_SIZE para 4096 tokens é crucial!
+# Recomendamos 2. Se a GPU falhar por falta de memória, mude para BATCH_SIZE = 1.
+BATCH_SIZE = 2 
+
 
 # --- 2. Custom Dataset Class (Herança de torch.utils.data.Dataset) ---
 class EssayDataset(Dataset):
@@ -35,6 +43,7 @@ class EssayDataset(Dataset):
         prompt = str(self.prompts[idx])
 
         # Tokenização: Combina essay e prompt, usando o token [SEP] para separá-los.
+        # Longformer (baseado em RoBERTa) não usa token_type_ids, por isso não o incluímos no retorno.
         encoding = self.tokenizer.encode_plus(
             essay,
             prompt,
@@ -43,15 +52,21 @@ class EssayDataset(Dataset):
             padding='max_length',
             truncation=True,
             return_attention_mask=True,
-            return_token_type_ids=True,
+            return_token_type_ids=False, # <-- Longformer não usa
             return_tensors='pt'
         )
 
         item = {
             'input_ids': encoding['input_ids'].flatten(),
             'attention_mask': encoding['attention_mask'].flatten(),
-            'token_type_ids': encoding['token_type_ids'].flatten()
         }
+
+        # Longformer requer 'global_attention_mask' para o token [CLS] (primeiro token)
+        # 0 = atenção local (janela deslizante), 1 = atenção global (atende a todos)
+        global_attention_mask = torch.zeros(self.max_len, dtype=torch.long)
+        global_attention_mask[0] = 1 # O token CLS recebe atenção global
+        item['global_attention_mask'] = global_attention_mask
+
 
         if self.targets is not None:
             # Converte as notas (targets) para um tensor float (Regressão)
@@ -59,29 +74,33 @@ class EssayDataset(Dataset):
 
         return item
 
-# --- 3. Custom Multi-Output Regression Model (Herança de torch.nn.Module) ---
-class BertForMultiOutputRegression(torch.nn.Module):
-    """Modelo BERTimbau com um 'head' de regressão para as 4 notas."""
+# --- 3. Custom Multi-Output Regression Model (Adaptado para Longformer) ---
+class LongformerForMultiOutputRegression(torch.nn.Module):
+    """Modelo Longformer com um 'head' de regressão para as 4 notas."""
     def __init__(self, n_outputs):
-        super(BertForMultiOutputRegression, self).__init__()
-        # Carrega o modelo base BERTimbau
-        self.bert = BertModel.from_pretrained(MODEL_NAME)
+        super(LongformerForMultiOutputRegression, self).__init__()
+        # Carrega o modelo base Longformer
+        self.longformer = AutoModel.from_pretrained(MODEL_NAME)
         # Camada dropout
         self.dropout = torch.nn.Dropout(0.1)
         # Camada de regressão: saída para o número de targets (4)
-        self.regressor = torch.nn.Linear(self.bert.config.hidden_size, n_outputs)
+        self.regressor = torch.nn.Linear(self.longformer.config.hidden_size, n_outputs)
         # Função de perda (Loss): MSE (Mean Squared Error) para regressão
         self.loss_fn = torch.nn.MSELoss()
 
-    def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
-        # A saída do BERT é (last_hidden_state, pooler_output, ...)
-        # Usamos o pooler_output (representação de [CLS] para regressão)
-        outputs = self.bert(
+    # Mude a assinatura da função forward para aceitar global_attention_mask e remover token_type_ids
+    def forward(self, input_ids, attention_mask, global_attention_mask=None, labels=None):
+        
+        # A saída do Longformer é (last_hidden_state, pooler_output, ...)
+        outputs = self.longformer(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            token_type_ids=token_type_ids
+            global_attention_mask=global_attention_mask
+            # token_type_ids REMOVIDO
         )
-        pooled_output = outputs['pooler_output'] # Saída do token [CLS]
+        
+        # O Longformer/RoBERTa usa o pooler_output (representação de [CLS] para regressão)
+        pooled_output = outputs['pooler_output'] 
 
         # Aplica dropout e a camada de regressão
         pooled_output = self.dropout(pooled_output)
@@ -98,14 +117,12 @@ class BertForMultiOutputRegression(torch.nn.Module):
 
 # --- 4. Função de Métrica ---
 def compute_metrics(p):
-    """Calcula as métricas de avaliação (MSE e RMSE)"""
+    """Calcula as métricas de avaliação (RMSE)"""
     predictions = p.predictions
     labels = p.label_ids
 
-    # Calcula o MSE (Mean Squared Error) para cada target
-    mse_scores = mean_squared_error(labels, predictions, multioutput='raw_values')
     # Calcula o RMSE (Root Mean Squared Error) para cada target
-    rmse_scores = np.sqrt(mse_scores)
+    rmse_scores = np.sqrt(mean_squared_error(labels, predictions, multioutput='raw_values'))
 
     metrics = {
         'avg_rmse': np.mean(rmse_scores),
@@ -132,8 +149,9 @@ def main():
     y_test = test_df[TARGETS].values
 
     # Inicializar Tokenizer, Modelo e Datasets
-    tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-    model = BertForMultiOutputRegression(n_outputs=len(TARGETS))
+    # Usando AutoTokenizer e AutoModel para carregar o Longformer
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = LongformerForMultiOutputRegression(n_outputs=len(TARGETS))
 
     train_dataset = EssayDataset(
         essays=train_df['essay'].values,
@@ -149,19 +167,22 @@ def main():
         tokenizer=tokenizer
     )
 
-    # Configurar TrainingArguments
+    # Configurar TrainingArguments (usando a correção de compatibilidade de argumentos)
     training_args = TrainingArguments(
-        output_dir='./bertimbau_results',
+        output_dir='./longformer_results',
         num_train_epochs=EPOCHS,
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,
         warmup_steps=500,
         weight_decay=0.01,
-        logging_dir='./bertimbau_logs',
+        logging_dir='./longformer_logs',
         logging_steps=100,
-        do_eval=True,               # Força a execução da avaliação quando eval_dataset é fornecido
-        save_total_limit=1,         # Limita o número de checkpoints salvos
-        save_steps=100,             # Salva a cada 100 steps
+        
+        # Argumentos Simplificados para evitar o TypeError e garantir avaliação
+        do_eval=True,               
+        save_total_limit=1,         
+        save_steps=100,             
+        
         metric_for_best_model='avg_rmse', 
         greater_is_better=False,
     )
@@ -171,12 +192,12 @@ def main():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        eval_dataset=test_dataset, # Usa o dataset de teste como avaliação (validation)
+        eval_dataset=test_dataset, 
         compute_metrics=compute_metrics
     )
 
     # Treinamento
-    print("\n--- Iniciando o treinamento do BERTimbau (Multi-Output Regression) ---")
+    print(f"\n--- Iniciando o treinamento do Longformer ({MAX_LEN} tokens) ---")
     trainer.train()
     print("--- Treinamento Concluído ---")
 
@@ -208,7 +229,7 @@ def main():
         results_df[f'{target}_PREDICTED'] = predicted_scores[:, i]
 
     # Salvar o resultado
-    output_file = "bertimbau_test_predictions_results.csv"
+    output_file = "longformer_test_predictions_results.csv"
     results_df.to_csv(output_file, index=False)
 
     print(f"\nResultados da predição salvos em: {output_file}")
