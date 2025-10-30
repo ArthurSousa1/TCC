@@ -4,3 +4,4 @@ venv/lib/
 modelo_tcc_finetuned/
 checkpoints/
 
+venv/
