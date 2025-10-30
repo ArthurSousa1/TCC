@@ -1,0 +1,5 @@
+venv/
+.venv/
+modelo_tcc_finetuned/
+checkpoints/
+
