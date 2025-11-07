@@ -1,0 +1,5 @@
+Modelo,N,t_stat,p_value,correlacao,significancia
+SBert,370,-19.6382,0.0,0.3887,🔴 Diferente (p < 0.05)
+melll_uff,370,-48.3261,0.0,0.4065,🔴 Diferente (p < 0.05)
+Portulan,370,-39.7751,0.0,0.4164,🔴 Diferente (p < 0.05)
+bertimbau,370,-42.8676,0.0,0.5249,🔴 Diferente (p < 0.05)

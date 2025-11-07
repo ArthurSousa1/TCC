@@ -60,3 +60,4 @@ xxhash==3.6.0
 yarl==1.22.0 
 accelerate==1.11.0 
 psutil==7.1.2
+protobuf==6.33.0

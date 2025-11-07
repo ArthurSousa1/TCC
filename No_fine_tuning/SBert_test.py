@@ -11,7 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # =========================================
 # Exemplo: suponha que seu arquivo se chama "redacoes.csv"
 # e possui as colunas 'essay' e 'prompt'
-df = pd.read_csv("redacoes.csv")
+df = pd.read_csv("datasets/redacoes.csv")
 
 # Mostra as primeiras linhas para garantir que está tudo certo
 print(df.head())
@@ -51,7 +51,7 @@ df["semantic_score"] = scores_str
 # =========================================
 # 7. Salvando os resultados
 # =========================================
-df.to_csv("redacoes_com_score.csv", index=False)
+df.to_csv("outputCSV/redacoes_com_score_SBert.csv", index=False)
 
 print("\nExemplo de saída:")
 print(df[["prompt", "essay", "semantic_score"]].head())
