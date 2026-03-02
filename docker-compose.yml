@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: tcc-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE=mongodb://mongo:27017/tcc
+    depends_on:
+      - mongo
+    volumes:
+      - ./Service:/app/Service
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:latest
+    container_name: tcc-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

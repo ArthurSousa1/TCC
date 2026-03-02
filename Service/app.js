@@ -26,7 +26,8 @@ const getRandomQuestion = (req, res) => {
 }
 
 const sendAnswer = (req, res) => {
-    res.status(200).send('Calculando nota para a questão ' + req.params.questionId);
+    res.status(200)
+    .json({status: 'success', data: {score: 8}});
 }
 
 app.get('/api/v1/allQuestions', getAllQuestion);
