@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - PORT=3000
       - DATABASE=mongodb://mongo:27017/tcc
     depends_on:
       - mongo
