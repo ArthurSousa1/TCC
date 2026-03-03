@@ -46,7 +46,6 @@ def evaluate():
         
         student_answer = data.get("student_answer", "").strip()
         reference_answer = data.get("reference_answer", "").strip()
-        max_score = float(data.get("max_score", 10))
         
         if not student_answer or not reference_answer:
             return jsonify({
@@ -55,7 +54,7 @@ def evaluate():
             }), 400
         
         # Usa a função do Core/evaluate.py
-        result = evaluate_answer(student_answer, reference_answer, max_score)
+        result = evaluate_answer(student_answer, reference_answer)
         
         return jsonify({
             "status": "success",

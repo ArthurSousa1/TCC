@@ -16,21 +16,13 @@ function getGradeColor(grade: number) {
   return "text-grade-fail";
 }
 
-function getGradeLabel(grade: number) {
-  if (grade === 10) return "Perfeito!";
-  if (grade >= 9) return "Excelente!";
-  if (grade >= 7) return "Bom trabalho!";
-  if (grade >= 5) return "Não está ruim";
-  if (grade >= 3) return "Precisa melhorar";
-  return "Putz...";
-}
-
 const Index = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
   const [grade, setGrade] = useState<number | null>(null);
+  const [gradeLabel, setGradeLabel] = useState<string | null>(null);
   const [isGrading, setIsGrading] = useState(false);
 
   // Buscar questões da API ao carregar
@@ -74,7 +66,6 @@ const Index = () => {
         body: JSON.stringify({ 
           student_answer: answer,
           reference_answer: question.answer,
-          max_score: 10
         }),
       });
 
@@ -84,8 +75,9 @@ const Index = () => {
       console.log("API Response:", data);
       
       const score = data.data?.score || 0;
-      console.log("Extracted Score:", score);
-      setGrade(Math.min(Math.max(Math.round(score), 0), 10));
+      const label = data.data?.label || "";
+      setGrade(score);
+      setGradeLabel(label);
       
     } catch (error) {
       console.error("Grading error:", error);
@@ -99,6 +91,7 @@ const Index = () => {
   const handleReset = () => {
     setAnswer("");
     setGrade(null);
+    setGradeLabel(null);
     
     // Seleciona uma nova pergunta aleatória
     if (questions.length > 0) {
@@ -207,7 +200,7 @@ const Index = () => {
                 </motion.p>
                 <p className="mt-1 font-mono text-sm text-muted-foreground">/10</p>
                 <p className={`mt-3 text-lg font-semibold ${getGradeColor(grade)}`}>
-                  {getGradeLabel(grade)}
+                  {gradeLabel}
                 </p>
 
                 <div className="mt-6 rounded-xl border border-border bg-background p-4">
