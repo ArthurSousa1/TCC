@@ -4,9 +4,7 @@ import random
 import os
 import sys
 
-# Adiciona o diretório Core ao path para importar o módulo evaluate
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Core'))
-
+# Importa o módulo evaluate que está no mesmo diretório
 from evaluate import evaluate_answer
 
 app = Flask(__name__)
