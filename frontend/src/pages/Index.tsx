@@ -1,22 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, RotateCcw } from "lucide-react";
 
-const QUESTIONS = [
-  "Qual o significado da vida?",
-  "Explique computação quântica em termos simples.",
-  "O que torna um bom líder?",
-  "Porque o céu é azul?",
-  "Qual é a invenção mais importante de todos os tempos?",
-  "Como você salvaria a fome humana?",
-  "O que é consciência?",
-  "Descreva internet para um cavaleiro medieval.",
-  "O que vem depois do infinito?",
-  "Porque sonhamos?",
-];
-
-function getRandomQuestion() {
-  return QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+interface Question {
+  id: number;
+  question: string;
+  answer: string;
 }
 
 function getGradeColor(grade: number) {
@@ -37,24 +26,55 @@ function getGradeLabel(grade: number) {
 }
 
 const Index = () => {
-  const [question] = useState(getRandomQuestion);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
+  const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
   const [grade, setGrade] = useState<number | null>(null);
   const [isGrading, setIsGrading] = useState(false);
 
+  // Buscar questões da API ao carregar
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/questions');
+        if (!response.ok) throw new Error('Failed to fetch questions');
+        
+        const data = await response.json();
+        const questionsArray = data.data?.questions || [];
+        setQuestions(questionsArray);
+        
+        // Seleciona uma pergunta aleatória
+        if (questionsArray.length > 0) {
+          console.log("Fetched Questions:", questionsArray);
+          const randomQuestion = questionsArray[Math.floor(Math.random() * questionsArray.length)];
+          setQuestion(randomQuestion);
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        alert('Erro ao carregar as questões. Verifique se a API está rodando em http://localhost:8000');
+      } finally {
+        setIsLoadingQuestions(false);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!answer.trim() || isGrading) return;
+    if (!answer.trim() || isGrading || !question) return;
 
     setIsGrading(true);
     
     try {
-      const response = await fetch(`/api/v1/answer/5`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/evaluate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          resposta: answer,
-          pergunta: question 
+          student_answer: answer,
+          reference_answer: question.answer,
+          max_score: 10
         }),
       });
 
@@ -69,7 +89,7 @@ const Index = () => {
       
     } catch (error) {
       console.error("Grading error:", error);
-      alert("Erro ao avaliar a resposta. Verifique se a API está rodando em 127.0.0.1:3000");
+      alert("Erro ao avaliar a resposta. Verifique se a API está rodando em http://localhost:8000");
       setGrade(0);
     } finally {
       setIsGrading(false);
@@ -79,9 +99,34 @@ const Index = () => {
   const handleReset = () => {
     setAnswer("");
     setGrade(null);
-    // Force remount with new question
-    window.location.reload();
+    
+    // Seleciona uma nova pergunta aleatória
+    if (questions.length > 0) {
+      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+      setQuestion(randomQuestion);
+    }
   };
+
+  if (isLoadingQuestions) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent"
+        />
+        <p className="mt-4 text-muted-foreground">Carregando questões...</p>
+      </div>
+    );
+  }
+
+  if (!question) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+        <p className="text-center text-lg text-muted-foreground">Nenhuma questão disponível</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
@@ -104,7 +149,7 @@ const Index = () => {
             Pergunta
           </p>
           <h2 className="mb-8 text-2xl font-bold leading-tight text-card-foreground">
-            {question}
+            {question.question}
           </h2>
 
           <AnimatePresence mode="wait">

@@ -12,7 +12,7 @@ services:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
     volumes:
-      - ./api:/app/api
+      - ./api:/app
     depends_on:
       - mongo
     restart: unless-stopped
