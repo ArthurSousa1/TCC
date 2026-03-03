@@ -9,9 +9,13 @@ services:
     environment:
       - PORT=3000
       - DATABASE=mongodb://mongo:27017/tcc
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
     depends_on:
       - mongo
     volumes:
+      - ./app.py:/app/app.py
+      - ./Core:/app/Core
       - ./Service:/app/Service
     restart: unless-stopped
 

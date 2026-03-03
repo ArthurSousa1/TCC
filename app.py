@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 import json
 import random
 import os
+import sys
+
+# Adiciona o diretório Core ao path para importar o módulo evaluate
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Core'))
+
+from evaluate import evaluate_answer
 
 app = Flask(__name__)
-
-# Carrega o modelo de IA
-print("Carregando modelo de IA...")
-model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-print("Modelo carregado com sucesso!")
 
 # Carrega as questões
 questions_path = os.path.join(os.path.dirname(__file__), 'Service', 'data', 'questions.json')
@@ -22,12 +21,7 @@ except FileNotFoundError:
     questions = {"questions": []}
     print(f"Arquivo de questões não encontrado em {questions_path}")
 
-
-def calculate_score(similarity, max_score=10):
-    """Calcula a nota baseada na similaridade"""
-    if similarity < 0:
-        similarity = 0.0
-    return min(similarity * max_score, max_score)
+print("Modelo de IA será carregado na primeira requisição de avaliação...")
 
 
 @app.route('/api/v1/allQuestions', methods=['GET'])
@@ -64,8 +58,8 @@ def get_random_question():
 
 
 @app.route('/api/v1/answer/<int:question_id>', methods=['POST'])
-def evaluate_answer(question_id):
-    """Avalia a resposta do aluno"""
+def answer_question(question_id):
+    """Avalia a resposta do aluno para uma questão específica"""
     try:
         data = request.get_json()
         
@@ -85,23 +79,24 @@ def evaluate_answer(question_id):
                 "message": "student_answer e reference_answer são obrigatórios"
             }), 400
         
-        # Gera embeddings e calcula similaridade
-        embeddings = model.encode([student_answer, reference_answer])
-        similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-        
-        # Calcula a nota
-        score = calculate_score(float(similarity), max_score)
+        # Usa a função do Core/evaluate.py
+        result = evaluate_answer(student_answer, reference_answer, max_score)
         
         return jsonify({
             "status": "success",
             "data": {
                 "question_id": question_id,
-                "similarity": float(similarity),
-                "score": round(score, 2),
-                "max_score": max_score
+                "similarity": result["similarity"],
+                "score": result["score"],
+                "max_score": result["max_score"]
             }
         }), 200
         
+    except ValueError as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 400
     except Exception as e:
         return jsonify({
             "status": "error",
@@ -111,7 +106,7 @@ def evaluate_answer(question_id):
 
 
 @app.route('/api/v1/evaluate', methods=['POST'])
-def evaluate_only():
+def evaluate():
     """Endpoint de avaliação simples (sem question_id)"""
     try:
         data = request.get_json()
@@ -132,22 +127,19 @@ def evaluate_only():
                 "message": "student_answer e reference_answer são obrigatórios"
             }), 400
         
-        # Gera embeddings e calcula similaridade
-        embeddings = model.encode([student_answer, reference_answer])
-        similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-        
-        # Calcula a nota
-        score = calculate_score(float(similarity), max_score)
+        # Usa a função do Core/evaluate.py
+        result = evaluate_answer(student_answer, reference_answer, max_score)
         
         return jsonify({
             "status": "success",
-            "data": {
-                "similarity": float(similarity),
-                "score": round(score, 2),
-                "max_score": max_score
-            }
+            "data": result
         }), 200
         
+    except ValueError as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 400
     except Exception as e:
         return jsonify({
             "status": "error",
@@ -164,4 +156,5 @@ def health():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    debug = os.environ.get('FLASK_DEBUG', '0') == '1'
+    app.run(host='0.0.0.0', port=port, debug=debug)
