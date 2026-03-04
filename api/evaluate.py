@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import pickle
 import os
 import numpy as np
+import re
 
 # Carrega o modelo uma única vez para reutilizá-lo
 _model = None
@@ -21,8 +22,8 @@ def load_grade_prediction_model():
     global _grade_predictor, _grade_scaler
     
     if _grade_predictor is None:
-        model_path = os.path.join(os.path.dirname(__file__), 'semantic_grade_model.pkl')
-        scaler_path = os.path.join(os.path.dirname(__file__), 'semantic_grade_scaler.pkl')
+        model_path = os.path.join(os.path.dirname(__file__), 'Service', 'models', 'semantic_grade_model.pkl')
+        scaler_path = os.path.join(os.path.dirname(__file__), 'Service', 'models', 'semantic_grade_scaler.pkl')
         
         try:
             if os.path.exists(model_path) and os.path.exists(scaler_path):
@@ -43,13 +44,29 @@ def calculate_score(similarity, max_score=10):
         similarity = 0.0
     return min(similarity * max_score, max_score)
 
+
+def normalize_text(text: str) -> str:
+    """Normaliza texto: lowercase, remove espaços extras e normaliza pontuação simples."""
+    if not text:
+        return ""
+    # Lowercase
+    t = text.lower()
+    # Replace multiple whitespace with single space
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
 def extract_features(student_answer, base_answer, similarity):
     """
     Extrai features da resposta para o modelo de predição
     """
+    # Normalizar textos
+    student_answer = normalize_text(student_answer)
+    base_answer = normalize_text(base_answer)
+
     student_words = len(student_answer.split()) if student_answer else 0
     base_words = len(base_answer.split()) if base_answer else 0
-    student_sentences = max(1, len([s for s in student_answer.split('.') if s.strip()]))
+    # Contar sentenças com pontuação básica
+    student_sentences = max(1, len([s for s in re.split(r"[\.\!?]+", student_answer) if s.strip()]))
     
     length_ratio = student_words / base_words if base_words > 0 else 0
     
@@ -68,8 +85,7 @@ def predict_grade(student_answer, base_answer, similarity):
     grade_predictor, grade_scaler = load_grade_prediction_model()
     
     if grade_predictor is None or grade_scaler is None:
-        # Fallback: converter similaridade (0-1) em grade (0-10)
-        return calculate_score(similarity, max_score=10)
+        raise RuntimeError("Modelo de predição de grades não encontrado. Execute o treinamento e salve o modelo antes de avaliar.")
     
     try:
         features = extract_features(student_answer, base_answer, similarity)
@@ -80,8 +96,8 @@ def predict_grade(student_answer, base_answer, similarity):
         return np.clip(float(predicted_grade), 0.0, 10.0)
     except Exception as e:
         print(f"⚠️ Erro ao prever grade: {e}")
-        # Fallback em caso de erro
-        return calculate_score(similarity, max_score=10)
+        # Em caso de erro, propagar para o chamador (ou retornar zero)
+        raise
 
 
 def get_grade_label(score):

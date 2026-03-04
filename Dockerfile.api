@@ -5,9 +5,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY api ./
+# Copia modelos treinados (se desejar embutir no build)
+# NOTA: docker-compose monta ./api em /app e sobrescreve o conteúdo do build.
+# Portanto em ambiente com volumes o código virá do host em /app.
+COPY api/Service/models /app/Service/models
 
 EXPOSE 8000
 
+# Ajustar PYTHONPATH para /app — corresponde ao volume ./api:/app no docker-compose
 ENV PYTHONPATH=/app:$PYTHONPATH
-CMD ["python", "app.py"]
+CMD ["python", "-u", "/app/app.py"]

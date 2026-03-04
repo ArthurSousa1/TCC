@@ -17,9 +17,9 @@ import os
 import sys
 
 # CONFIGURAÇÃO - ALTERE AQUI COM O CAMINHO REAL DO SEU CSV
-GRADES_CSV = os.path.join(os.path.dirname(__file__), 'grading_training_data.csv')  # Altere para o seu arquivo
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'semantic_grade_model.pkl')
-SCALER_PATH = os.path.join(os.path.dirname(__file__), 'semantic_grade_scaler.pkl')
+GRADES_CSV = os.path.join(os.path.dirname(__file__), 'Service', 'data', 'grading_training_data.csv')  
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'Service', 'models', 'semantic_grade_model.pkl')
+SCALER_PATH = os.path.join(os.path.dirname(__file__), 'Service', 'models', 'semantic_grade_scaler.pkl')
 
 def load_semantic_transformer():
     """Carrega o transformer de embeddings"""
