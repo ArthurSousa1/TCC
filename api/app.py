@@ -34,7 +34,7 @@ def get_all_questions():
 
 @app.route('/api/v1/evaluate', methods=['POST'])
 def evaluate():
-    """Endpoint de avaliação simples (sem question_id)"""
+    """Endpoint de avaliação simples"""
     try:
         data = request.get_json()
         
@@ -45,16 +45,16 @@ def evaluate():
             }), 400
         
         student_answer = data.get("student_answer", "").strip()
-        reference_answer = data.get("reference_answer", "").strip()
+        question_id = data.get("question_id", "")
         
-        if not student_answer or not reference_answer:
+        if not student_answer or not question_id:
             return jsonify({
                 "status": "error",
-                "message": "student_answer e reference_answer são obrigatórios"
+                "message": "student_answer e question_id são obrigatórios"
             }), 400
         
         # Usa a função do Core/evaluate.py
-        result = evaluate_answer(student_answer, reference_answer)
+        result = evaluate_answer(student_answer, question_id)
         
         return jsonify({
             "status": "success",

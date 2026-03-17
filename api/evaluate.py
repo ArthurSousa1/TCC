@@ -1,67 +1,126 @@
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-import pickle
-import os
-import numpy as np
 import re
+import numpy as np
 
-# Carrega o modelo uma única vez para reutilizá-lo
-_model = None
-_grade_predictor = None
-_grade_scaler = None
+from sklearn.metrics.pairwise import cosine_similarity
+from helpers import _questions, get_model, load_grade_prediction_model, concatanate_feedback, normalize_text
 
-def get_model():
-    """Retorna o modelo de IA, carregando-o se necessário"""
-    global _model
-    if _model is None:
-        _model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-    return _model
-
-def load_grade_prediction_model():
-    """Carrega o modelo pré-treinado de predição de grades"""
-    global _grade_predictor, _grade_scaler
+### Done - All steps defined
+def evaluate_answer(student_answer, question_id: int):
+    #Begin validating parameters
+    if not student_answer or not question_id:
+        raise ValueError("Resposta do aluno e ID da questão são obrigatórias")
     
-    if _grade_predictor is None:
-        model_path = os.path.join(os.path.dirname(__file__), 'Service', 'models', 'semantic_grade_model.pkl')
-        scaler_path = os.path.join(os.path.dirname(__file__), 'Service', 'models', 'semantic_grade_scaler.pkl')
+    #Get question data to compare
+    reference_answer = []
+    keywords = []
+    for q in _questions.get("questions", []):
+        if q["id"] == question_id:
+            reference_answer = q["reference_answer"]
+            keywords = q["keywords"]
+
+    clean_reference_answer = normalize_text(reference_answer)
+    clean_student_answer = normalize_text(student_answer)
+
+    #If question not found or without reference answer/keywords, raise error
+    if not reference_answer or not keywords:
+        raise ValueError(f"Questão com ID {question_id} não encontrada ou sem resposta de referência/keywords")
+
+    #Validate if student answer is identical to reference answer (ignoring case and punctuation)
+    if try_same_text(clean_reference_answer, clean_student_answer):
+        print("Resposta idêntica à referência, atribuindo nota máxima...")
+        return {
+            "score": 10.0,
+            "feedback": "Perfeito meu amigo, copiou do gabarito, ta colando né?"
+        }
+    
+    #If user input is not the same as reference answer, validate keywords presence and calculate semantic similarity
+    keywords_score, missing_keywords = validate_keywords(keywords, clean_student_answer)
+    if keywords_score == 0:
+        return {
+            "score": 0.0,
+            "feedback": "Nenhuma palavra-chave encontrada, revise os conceitos e tente novamente."
+        }
+    
+    semantic_similarity_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answer, clean_student_answer)
+    final_score = keywords_score + semantic_similarity_score
+    
+    return {
+        "score": round(final_score, 2),
+        "feedback": concatanate_feedback(missing_keywords, semantic_similarity_feedback)
+    }
+
+### Done - Check if user input is the same as reference answer (ignoring case and punctuation)
+def try_same_text(reference_answer, student_answer):
+    palavras1 = re.findall(r'\w+', reference_answer.lower())
+    palavras2 = re.findall(r'\w+', student_answer.lower())
+
+    total = len(palavras1)
+    iguais = 0
+
+    for palavra in palavras1:
+        if palavra in palavras2:
+            iguais += 1
+
+    similaridade = iguais / total
+    return similaridade >= 0.90
+
+### Done - checking if keyword is used, calculate the score for each and return all missing keywords + final keyword score 
+def validate_keywords(keywords, student_answer):
+    quantidade_keywords = len(keywords)
+    
+    if quantidade_keywords == 0:
+        return 0, []
+
+    peso_keyword = 10 / quantidade_keywords
+    keyword_score = 0
+    missing_keywords = []
+
+    for keyword in keywords:
+        keyword_lower = keyword.lower()
         
-        try:
-            if os.path.exists(model_path) and os.path.exists(scaler_path):
-                with open(model_path, 'rb') as f:
-                    _grade_predictor = pickle.load(f)
-                with open(scaler_path, 'rb') as f:
-                    _grade_scaler = pickle.load(f)
-                print("✅ Modelo de predição de grades carregado!")
-        except Exception as e:
-            print(f"⚠️ Erro ao carregar modelo de grades: {e}")
+        if keyword_lower in student_answer.lower():
+            keyword_score += peso_keyword
+        else:
+            missing_keywords.append(keyword)
+
+    return keyword_score, missing_keywords
+
+### Under development
+def validate_semantic_similarity(reference_answer, student_answer):
+    # Carrega o modelo semântico
+    model = get_model()
     
-    return _grade_predictor, _grade_scaler
+    # Gera embeddings para ambas as respostas
+    embeddings = model.encode([student_answer, reference_answer])
+    
+    # Calcula a similaridade semântica
+    similarity = float(cosine_similarity(
+        [embeddings[0]],
+        [embeddings[1]]
+    )[0][0])
+    
+    # Usa modelo treinado para prever a grade
+    # score = predict_grade(student_answer, question_id, similarity)
+    return similarity, "feedback do que ficou faltando para melhorar a nota"
 
+### Under development
+def predict_grade(student_answer, base_answer, similarity):
+    grade_predictor, grade_scaler = load_grade_prediction_model()
+    
+    if grade_predictor is None or grade_scaler is None:
+        raise RuntimeError("Modelo de predição de grades não encontrado. Execute o treinamento e salve o modelo antes de avaliar.")
+    
+    try:
+        features = extract_features(student_answer, base_answer, similarity)
+        features_scaled = grade_scaler.transform(features)
+        predicted_grade = grade_predictor.predict(features_scaled)[0]
+        return np.clip(float(predicted_grade), 0.0, 10.0)
+    except Exception as e:
+        print(f"⚠️ Erro ao prever grade: {e}")
+        raise
 
-def calculate_score(similarity, max_score=10):
-    """Calcula a nota baseada na similaridade"""
-    if similarity < 0:
-        similarity = 0.0
-    return min(similarity * max_score, max_score)
-
-
-def normalize_text(text: str) -> str:
-    """Normaliza texto: lowercase, remove espaços extras e normaliza pontuação simples."""
-    if not text:
-        return ""
-    # Lowercase
-    t = text.lower()
-    # Replace multiple whitespace with single space
-    t = re.sub(r"\s+", " ", t).strip()
-    return t
-
+### Under development
 def extract_features(student_answer, base_answer, similarity):
-    """
-    Extrai features da resposta para o modelo de predição
-    """
-    # Normalizar textos
-    student_answer = normalize_text(student_answer)
-    base_answer = normalize_text(base_answer)
 
     student_words = len(student_answer.split()) if student_answer else 0
     base_words = len(base_answer.split()) if base_answer else 0
@@ -77,88 +136,71 @@ def extract_features(student_answer, base_answer, similarity):
         student_sentences,
     ]])
 
-def predict_grade(student_answer, base_answer, similarity):
-    """
-    Prediz a grade usando o modelo treinado
-    Se não houver modelo, usa fallback baseado em similaridade
-    """
-    grade_predictor, grade_scaler = load_grade_prediction_model()
-    
-    if grade_predictor is None or grade_scaler is None:
-        raise RuntimeError("Modelo de predição de grades não encontrado. Execute o treinamento e salve o modelo antes de avaliar.")
-    
-    try:
-        features = extract_features(student_answer, base_answer, similarity)
-        features_scaled = grade_scaler.transform(features)
-        predicted_grade = grade_predictor.predict(features_scaled)[0]
-        
-        # Garantir que está entre 0 e 10
-        return np.clip(float(predicted_grade), 0.0, 10.0)
-    except Exception as e:
-        print(f"⚠️ Erro ao prever grade: {e}")
-        # Em caso de erro, propagar para o chamador (ou retornar zero)
-        raise
+
+# ### Teste rápido
+# (print ("=====================primeiro exemplo====================="))
+# (print(evaluate_answer("Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe.", 3)))
+
+# ### Uma resposta média
+# (print ("=====================segundo exemplo====================="))
+# (print(evaluate_answer("Um bom líder ajuda seus liderados, tem uma boa comunicação, inspira os outros e toma decisões com responsabilidade.", 3)))
+
+# ### Uma resposta ruim
+# (print ("=====================terceiro exemplo====================="))
+# (print(evaluate_answer("Um líder é alguém que manda na equipe e tem que ser respeitado.", 3)))
 
 
-def get_grade_label(score):
-    """Retorna a label/feedback baseado na nota"""
-    if score == 10:
-        return "Perfeito, você é incrível!"
-    if score >= 9:
-        return "Top dmais mermão!"
-    if score >= 7:
-        return "É foi bom, mas da pra melhorar!"
-    if score >= 5:
-        return "Perigoso isso ai hein"
-    if score >= 3:
-        return "Rapaz... ai vai sobrar pra P3"
-    return "Exame de formando é em Agosto..."
 
-
-def evaluate_answer(student_answer, reference_answer):
-    """
-    Avalia a resposta do aluno comparando com a resposta de referência.
-    
-    Processa:
-    1. Calcula similaridade semântica entre as respostas
-    2. Extrai features estruturais (comprimento, etc)
-    3. Usa modelo treinado para prever a grade (0-10)
-    4. Gera feedback baseado na grade
-    
-    Args:
-        student_answer (str): A resposta fornecida pelo aluno
-        reference_answer (str): A resposta de referência para comparação
-    
-    Returns:
-        dict: Dicionário contendo:
-            - similarity: Valor de similaridade semântica (0-1)
-            - score: Nota predita pelo modelo (0-10)
-            - label: Feedback em texto sobre a nota
-    """
-    # Validação básica
-    if not student_answer or not reference_answer:
-        raise ValueError("Resposta do aluno e resposta de referência são obrigatórias")
-    
-    # Carrega o modelo semântico
+def testando_semantica(keywords, student_answer):
     model = get_model()
-    
-    # Gera embeddings para ambas as respostas
-    embeddings = model.encode([student_answer, reference_answer])
-    
-    # Calcula a similaridade semântica
-    similarity = float(cosine_similarity(
-        [embeddings[0]],
-        [embeddings[1]]
-    )[0][0])
-    
-    # Usa modelo treinado para prever a grade
-    score = predict_grade(student_answer, reference_answer, similarity)
-    
-    # Gera feedback
-    label = get_grade_label(round(score, 2))
-    
-    return {
-        "similarity": similarity,
-        "score": round(score, 2),
-        "label": label
-    }
+    similarity = []
+
+    # Divide a resposta em frases
+    sentences = [s.strip() for s in re.split(r'\.\s*', student_answer) if s.strip()]
+
+    for k in keywords:
+        keyword_lower = k.lower()
+        similarities_per_keyword = []
+
+        for sentence in sentences:
+            sentence_lower = sentence.lower()
+
+            # Verifica se a frase contém a keyword
+            if keyword_lower in sentence_lower:
+                embeddings = model.encode([sentence, k])
+
+                sim = float(cosine_similarity(
+                    [embeddings[0]],
+                    [embeddings[1]]
+                )[0][0])
+
+                similarities_per_keyword.append(sim)
+
+        # Calcula média das similaridades dessa keyword
+        if similarities_per_keyword:
+            #Se mais de uma frase possuir a keyword, calcula a média das similaridades para aquela keyword
+            avg_similarity = sum(similarities_per_keyword) / len(similarities_per_keyword)
+            similarity.append(avg_similarity)
+        else:
+            similarity.append(0)  # keyword não apareceu em nenhuma frase
+
+    # Média final geral
+    if similarity:
+        final_similarity = sum(similarity) / len(similarity)
+    else:
+        final_similarity = 0
+
+    return final_similarity, "feedback do que ficou faltando para melhorar a nota"
+
+
+### Teste rápido
+(print ("=====================primeiro exemplo====================="))
+(print(testando_semantica(["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"],"Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe.")))
+
+### Uma resposta média
+(print ("=====================segundo exemplo====================="))
+(print(testando_semantica(["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"], "Um bom líder ajuda seus liderados, tem uma boa comunicação, inspira os outros e toma decisões com responsabilidade.")))
+
+### Uma resposta ruim
+(print ("=====================terceiro exemplo====================="))
+(print(testando_semantica(["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"], "Um líder é alguém que manda na equipe e tem que ser respeitado.")))

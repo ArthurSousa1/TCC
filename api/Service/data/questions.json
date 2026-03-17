@@ -3,52 +3,62 @@
     {
       "id": 1,
       "question": "Qual o significado da vida?",
-      "answer": "Não existe uma única resposta. Para muitos, é buscar felicidade, conexões, aprendizado e propósito. O significado pode ser aquilo que você decide construir."
+      "reference_answer": "Não existe uma única resposta. Para muitos, é buscar felicidade, conexões, aprendizado e propósito. O significado pode ser aquilo que você decide construir.",
+      "keywords": ["significado da vida", "felicidade", "conexões", "propósito"]
     },
     {
       "id": 2,
       "question": "Explique computação quântica em termos simples",
-      "answer": "É um tipo de computação que usa as leis da física quântica. Em vez de bits que são 0 ou 1, ela usa “qubits”, que podem ser 0 e 1 ao mesmo tempo, permitindo resolver certos problemas muito mais rápido que computadores comuns."
+      "reference_answer": "É um tipo de computação que usa as leis da física quântica. Em vez de bits que são 0 ou 1, ela usa “qubits”, que podem ser 0 e 1 ao mesmo tempo, permitindo resolver certos problemas muito mais rápido que computadores comuns.",
+      "keywords": ["computação quântica", "qubits", "superposição", "velocidade"]
     },
     {
       "id": 3,
       "question": "O que torna um bom líder?",
-      "answer": "Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe."
+      "reference_answer": "Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe.",
+      "keywords": ["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"]
     },
     {
       "id": 4,
       "question": "Porque o céu é azul?",
-      "answer": "Porque a luz do Sol bate na atmosfera e a cor azul se espalha mais do que as outras cores. Por isso vemos o céu azul durante o dia."
+      "reference_answer": "Porque a luz do Sol bate na atmosfera e a cor azul se espalha mais do que as outras cores. Por isso vemos o céu azul durante o dia.",
+      "keywords": ["céu azul", "luz do Sol", "atmosfera", "dispersão da luz"]
     },
     {
       "id": 5,
       "question": "Qual é a invenção mais importante de todos os tempos?",
-      "answer": "Muita gente considera a escrita ou a roda. A escrita, por exemplo, permitiu guardar conhecimento e transmiti-lo ao longo da história."
+      "reference_answer": "Muita gente considera a escrita ou a roda. A escrita, por exemplo, permitiu guardar conhecimento e transmiti-lo ao longo da história.",
+      "keywords": ["invenção mais importante", "escrita", "roda", "conhecimento"]
     },
     {
       "id": 6,
       "question": "Como você salvaria a fome humana?",
-      "answer": "Investindo em distribuição eficiente de alimentos, agricultura sustentável, redução de desperdício e políticas públicas que garantam acesso à comida para todos."
+      "reference_answer": "Investindo em distribuição eficiente de alimentos, agricultura sustentável, redução de desperdício e políticas públicas que garantam acesso à comida para todos.",
+      "keywords": ["salvar fome humana", "distribuição de alimentos", "agricultura sustentável", "redução de desperdício", "políticas públicas"]
     },
     {
       "id": 7,
       "question": "O que é consciência?",
-      "answer": "É a capacidade de perceber o mundo ao redor e ter experiências internas, como pensamentos, emoções e sensações."
+      "reference_answer": "É a capacidade de perceber o mundo ao redor e ter experiências internas, como pensamentos, emoções e sensações.",
+      "keywords": ["consciência", "percepção", "experiências internas", "pensamentos", "emoções", "sensações"]
     },
     {
       "id": 8,
       "question": "Descreva internet para um cavaleiro medieval.",
-      "answer": "Imagine uma biblioteca infinita conectada por fios invisíveis, onde qualquer pessoa pode enviar mensagens, aprender sobre qualquer assunto e falar com alguém do outro lado do mundo quase instantaneamente."
+      "reference_answer": "Imagine uma biblioteca infinita conectada por fios invisíveis, onde qualquer pessoa pode enviar mensagens, aprender sobre qualquer assunto e falar com alguém do outro lado do mundo quase instantaneamente.",
+      "keywords": ["internet", "biblioteca infinita", "fios invisíveis", "mensagens", "conexão global"]
     },
     {
       "id": 9,
       "question": "O que vem depois do infinito?",
-      "answer": "Matematicamente, nada. Infinito não é um número comum — é a ideia de algo que não tem fim."
+      "reference_answer": "Matematicamente, nada. Infinito não é um número comum — é a ideia de algo que não tem fim.",
+      "keywords": ["infinito", "matemática", "número", "sem fim"]
     },
     {
       "id": 10,
       "question": "Porque sonhamos?",
-      "answer": "Ainda não há certeza absoluta, mas acredita-se que sonhamos para processar emoções, organizar memórias e ajudar o cérebro a aprender."
+      "reference_answer": "Ainda não há certeza absoluta, mas acredita-se que sonhamos para processar emoções, organizar memórias e ajudar o cérebro a aprender.",
+      "keywords": ["sonhamos", "processar emoções", "organizar memórias", "aprender"]
     }
   ]
 }

@@ -5,7 +5,8 @@ import { Send, RotateCcw } from "lucide-react";
 interface Question {
   id: number;
   question: string;
-  answer: string;
+  reference_answer: string;
+  keywords: string[];
 }
 
 function getGradeColor(grade: number) {
@@ -65,7 +66,7 @@ const Index = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           student_answer: answer,
-          reference_answer: question.answer,
+          question_id: question.id,
         }),
       });
 
@@ -75,7 +76,7 @@ const Index = () => {
       console.log("API Response:", data);
       
       const score = data.data?.score || 0;
-      const label = data.data?.label || "";
+      const label = data.data?.feedback || "";
       setGrade(score);
       setGradeLabel(label);
       
