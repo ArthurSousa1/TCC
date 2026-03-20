@@ -1,34 +1,20 @@
-import json
-import random
 import os
-import sys
-from evaluate import evaluate_answer
-
-from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask import Flask, request, jsonify
+
+from helpers import _questions
+from evaluate import evaluate_answer
 
 app = Flask(__name__)
 CORS(app)
-
-questions_path = os.path.join(os.path.dirname(__file__), 'Service', 'data', 'questions.json')
-try:
-    with open(questions_path, 'r', encoding='utf-8') as f:
-        questions = json.load(f)
-    print(f"Questões carregadas com sucesso! Total: {len(questions.get('questions', []))}")
-except FileNotFoundError:
-    questions = {"questions": []}
-    print(f"Arquivo de questões não encontrado em {questions_path}")
-
-print("Modelo de IA será carregado na primeira requisição de avaliação...")
-
 
 @app.route('/api/v1/questions', methods=['GET'])
 def get_all_questions():
     """Retorna todas as questões"""
     return jsonify({
         "status": "success",
-        "results": len(questions.get("questions", [])),
-        "data": questions
+        "results": len(_questions.get("questions", [])),
+        "data": _questions
     }), 200
 
 

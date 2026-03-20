@@ -18,7 +18,7 @@ def evaluate_answer(student_answer, question_id: int):
             reference_answer = q["reference_answer"]
             keywords = q["keywords"]
 
-    clean_reference_answer = normalize_text(reference_answer)
+    clean_reference_answers = [normalize_text(ans) for ans in reference_answer]
     clean_student_answer = normalize_text(student_answer)
 
     #If question not found or without reference answer/keywords, raise error
@@ -26,12 +26,13 @@ def evaluate_answer(student_answer, question_id: int):
         raise ValueError(f"Questão com ID {question_id} não encontrada ou sem resposta de referência/keywords")
 
     #Validate if student answer is identical to reference answer (ignoring case and punctuation)
-    if try_same_text(clean_reference_answer, clean_student_answer):
-        print("Resposta idêntica à referência, atribuindo nota máxima...")
-        return {
-            "score": 10.0,
-            "feedback": "Perfeito meu amigo, copiou do gabarito, ta colando né?"
-        }
+    for answer in clean_reference_answers:
+        if try_same_text(answer, clean_student_answer):
+            print("Resposta idêntica à referência, atribuindo nota máxima...")
+            return {
+                "score": 10.0,
+                "feedback": "Perfeito meu amigo, copiou do gabarito, ta colando né?"
+            }
     
     #If user input is not the same as reference answer, validate keywords presence and calculate semantic similarity
     keywords_score, missing_keywords = validate_keywords(keywords, clean_student_answer)
@@ -41,11 +42,12 @@ def evaluate_answer(student_answer, question_id: int):
             "feedback": "Nenhuma palavra-chave encontrada, revise os conceitos e tente novamente."
         }
     
-    semantic_similarity_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answer, clean_student_answer)
-    final_score = keywords_score + semantic_similarity_score
+    semantic_similarity_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answers, clean_student_answer)
+    final_score = (0.40*keywords_score) + (0.60*semantic_similarity_score)
+    formatted_score = round(final_score, 2)
     
     return {
-        "score": round(final_score, 2),
+        "score": formatted_score,
         "feedback": concatanate_feedback(missing_keywords, semantic_similarity_feedback)
     }
 
@@ -86,22 +88,26 @@ def validate_keywords(keywords, student_answer):
     return keyword_score, missing_keywords
 
 ### Under development
-def validate_semantic_similarity(reference_answer, student_answer):
+def validate_semantic_similarity(reference_answers, student_answer):
     # Carrega o modelo semântico
     model = get_model()
+    similarity = []
+
+    for reference_answer in reference_answers:
+        # Gera embeddings para ambas as respostas
+        embeddings = model.encode([student_answer, reference_answer])
+        
+        # Calcula a similaridade semântica
+        similarity.append(float(cosine_similarity(
+            [embeddings[0]],
+            [embeddings[1]]
+        )[0][0]))
     
-    # Gera embeddings para ambas as respostas
-    embeddings = model.encode([student_answer, reference_answer])
-    
-    # Calcula a similaridade semântica
-    similarity = float(cosine_similarity(
-        [embeddings[0]],
-        [embeddings[1]]
-    )[0][0])
-    
+    # similarity_score = max(similarity) * 10 
+
     # Usa modelo treinado para prever a grade
-    # score = predict_grade(student_answer, question_id, similarity)
-    return similarity, "feedback do que ficou faltando para melhorar a nota"
+    score_final = predict_grade(student_answer, reference_answer, max(similarity))
+    return score_final, "feedback do que ficou faltando para melhorar a nota"
 
 ### Under development
 def predict_grade(student_answer, base_answer, similarity):
@@ -137,70 +143,24 @@ def extract_features(student_answer, base_answer, similarity):
     ]])
 
 
-# ### Teste rápido
-# (print ("=====================primeiro exemplo====================="))
-# (print(evaluate_answer("Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe.", 3)))
-
-# ### Uma resposta média
-# (print ("=====================segundo exemplo====================="))
-# (print(evaluate_answer("Um bom líder ajuda seus liderados, tem uma boa comunicação, inspira os outros e toma decisões com responsabilidade.", 3)))
-
-# ### Uma resposta ruim
-# (print ("=====================terceiro exemplo====================="))
-# (print(evaluate_answer("Um líder é alguém que manda na equipe e tem que ser respeitado.", 3)))
-
-
-
-def testando_semantica(keywords, student_answer):
-    model = get_model()
-    similarity = []
-
-    # Divide a resposta em frases
-    sentences = [s.strip() for s in re.split(r'\.\s*', student_answer) if s.strip()]
-
-    for k in keywords:
-        keyword_lower = k.lower()
-        similarities_per_keyword = []
-
-        for sentence in sentences:
-            sentence_lower = sentence.lower()
-
-            # Verifica se a frase contém a keyword
-            if keyword_lower in sentence_lower:
-                embeddings = model.encode([sentence, k])
-
-                sim = float(cosine_similarity(
-                    [embeddings[0]],
-                    [embeddings[1]]
-                )[0][0])
-
-                similarities_per_keyword.append(sim)
-
-        # Calcula média das similaridades dessa keyword
-        if similarities_per_keyword:
-            #Se mais de uma frase possuir a keyword, calcula a média das similaridades para aquela keyword
-            avg_similarity = sum(similarities_per_keyword) / len(similarities_per_keyword)
-            similarity.append(avg_similarity)
-        else:
-            similarity.append(0)  # keyword não apareceu em nenhuma frase
-
-    # Média final geral
-    if similarity:
-        final_similarity = sum(similarity) / len(similarity)
-    else:
-        final_similarity = 0
-
-    return final_similarity, "feedback do que ficou faltando para melhorar a nota"
-
-
-### Teste rápido
 (print ("=====================primeiro exemplo====================="))
-(print(testando_semantica(["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"],"Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe.")))
+(print ("nota esperada: 7,5"))
+(print ("Nota atribuida: ", evaluate_answer("A arte é um resultado cultural, independente da situação em que a cultura se encontra, a arte resiste. São as sátiras em momentos de censura, o canto de escravos, os livros cheios de metáforas. A arte é expressão natural do ser humano, limitar ela, é limitar nossa existência. Precisamos introduzir a oportunidade de experienciar a arte para todos os cidadãos, através do desenvolvimento de politicas para ingressos para eventos de artes, aulas de artes acessivéis a todos, a valorização do artista como profissional..", 1)))
 
-### Uma resposta média
 (print ("=====================segundo exemplo====================="))
-(print(testando_semantica(["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"], "Um bom líder ajuda seus liderados, tem uma boa comunicação, inspira os outros e toma decisões com responsabilidade.")))
+(print ("nota esperada: 0"))
+(print ("Nota atribuida: ", evaluate_answer("A arte fala muito sobre o que há dentro de nós.", 1)))
 
-### Uma resposta ruim
 (print ("=====================terceiro exemplo====================="))
-(print(testando_semantica(["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"], "Um líder é alguém que manda na equipe e tem que ser respeitado.")))
+(print ("nota esperada: 9,0"))
+(print ("Nota atribuida: ", evaluate_answer("A arte é uma forma de expressão, de mostrar o que sente, protesto e principalmente liberdade, ela é um presente de todos está presente na constituição, entretando, quandoa liberdade é censurada, por consequência, a arte é censurada. Duas ações educativas seria a primeira maior divulgação das formas artísticas que temos hoje em dia, e a segunda levar ou incentivar pessoas, principalmente crianças, a conhecer ou participar de diversas formas de arte.", 1)))
+
+(print ("=====================quarto exemplo====================="))
+(print ("nota esperada: 5,0"))
+(print ("Nota atribuida: ", evaluate_answer("Partindo do princípio que todo cidadão brasileiro, constitucionalmente, tem garantido o direito de liberdade de expressão, a cultura tende a ser mal vista perante essa tal liberdade. Contudo, existem certos limites que não devem ser cruzados. Segundo a fala popular que diz 'a sua liberdade não pode ser tamanha ao ponto de tirar a liberdade do outro', deixa claro que é essencial o poder da liberdade, mas até certo ponto. Um brasilieiro que foi muito atacado, chegando até a ser exilado do país, apresenta uma ideia de um partido nazista, utilizando como argumento a liberdade de expressão. O regime nazista tem como principal ideologia a soberania de uma classe ariana, que vai contra, e nesse contexto, acredita-se que a censura e cultura devem repudiar isso.", 1)))
+
+(print ("=====================quinto exemplo====================="))
+(print ("nota esperada: 10,0"))
+(print ("Nota atribuida: ", evaluate_answer("A arte, ao tensionar a cultura e questionar valores estabelecidos, exerce papel essencial na transformação social. Conforme exposto no Texto 1, ela atua como elemento de ruptura, reorganizando significados e desafiando padrões dominantes. Essa característica, no entanto, frequentemente gera reações de censura por parte de grupos que interpretam tais manifestações como ameaças à ordem cultural. Todavia, a Constituição Federal de 1988 assegura a liberdade artística como direito fundamental. O inciso IX do Artigo 5º garante a livre expressão intelectual e artística sem censura, o que torna ilegítimas quaisquer tentativas de restrição. Assim, a censura representa não apenas um retrocesso democrático, mas também uma limitação ao pluralismo cultural. Diante disso, a educação surge como ferramenta essencial. A realização de encontros entre artistas e estudantes em ambientes escolares favorece o diálogo e a compreensão da arte. Ademais, projetos de acesso a espaços culturais, como museus e galerias, ampliam o repertório cultural da população, contribuindo para a valorização da liberdade artística.", 1)))
+
+

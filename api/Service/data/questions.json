@@ -2,63 +2,63 @@
   "questions": [
     {
       "id": 1,
-      "question": "Qual o significado da vida?",
-      "reference_answer": "Não existe uma única resposta. Para muitos, é buscar felicidade, conexões, aprendizado e propósito. O significado pode ser aquilo que você decide construir.",
-      "keywords": ["significado da vida", "felicidade", "conexões", "propósito"]
+      "question": "Considerando as informações e os argumentos presentes nos textos 1 e 2, discorra a respeito da relação entre arte, cultura e censura à luz da ideia de liberdade artística garantida pela Constituição Federal de 1988. Apresente, em seu texto, duas ações educativas que podem contribuir para minimizar essa tensões e garantir a liberdade artística prevista pela lei.",
+      "reference_answer": [
+        "A relação entre arte, cultura e censura no Brasil contemporâneo revela tensões estruturais entre liberdade de expressão e tentativas de controle social. Conforme o Texto 1, a arte possui caráter disruptivo, sendo responsável por questionar padrões culturais estabelecidos. Nesse sentido, ao provocar incômodo e reflexão, ela frequentemente entra em conflito com setores que buscam preservar normas sociais, o que explica o surgimento de movimentos de censura. Entretanto, tais práticas mostram-se incompatíveis com a Constituição Federal de 1988. O Artigo 5º assegura a liberdade de expressão artística independentemente de censura, evidenciando que qualquer tentativa de limitar manifestações artísticas fere princípios democráticos. Assim, a censura não apenas restringe a produção cultural, mas também compromete o desenvolvimento crítico da sociedade. Para minimizar essas tensões, é fundamental investir em ações educativas. Primeiramente, a promoção de debates em escolas e espaços públicos pode ampliar a compreensão sobre o papel da arte. Além disso, a realização de visitas a museus e centros culturais contribui para a formação de público mais crítico e tolerante, fortalecendo a liberdade artística garantida pela Constituição.",
+        "A arte, ao tensionar a cultura e questionar valores estabelecidos, exerce papel essencial na transformação social. Conforme exposto no Texto 1, ela atua como elemento de ruptura, reorganizando significados e desafiando padrões dominantes. Essa característica, no entanto, frequentemente gera reações de censura por parte de grupos que interpretam tais manifestações como ameaças à ordem cultural. Todavia, a Constituição Federal de 1988 assegura a liberdade artística como direito fundamental. O inciso IX do Artigo 5º garante a livre expressão intelectual e artística sem censura, o que torna ilegítimas quaisquer tentativas de restrição. Assim, a censura representa não apenas um retrocesso democrático, mas também uma limitação ao pluralismo cultural. Diante disso, a educação surge como ferramenta essencial. A realização de encontros entre artistas e estudantes em ambientes escolares favorece o diálogo e a compreensão da arte. Ademais, projetos de acesso a espaços culturais, como museus e galerias, ampliam o repertório cultural da população, contribuindo para a valorização da liberdade artística.",
+        "No contexto contemporâneo, a arte e a cultura mantêm uma relação dinâmica marcada por tensões, especialmente quando surgem tentativas de censura. De acordo com o Texto 1, a arte tem como função provocar, questionar e transformar, o que inevitavelmente a coloca em confronto com padrões culturais estabelecidos. Dessa forma, a censura surge como mecanismo de controle diante do incômodo causado pela expressão artística. Entretanto, essa prática é incompatível com os princípios constitucionais. A Constituição de 1988 garante, em seu Artigo 5º, a liberdade de expressão artística sem censura, reforçando o compromisso do Estado com a democracia e a diversidade cultural. Assim, a censura revela-se ilegítima, pois restringe direitos fundamentais e impede o desenvolvimento crítico da sociedade. Para enfrentar esse cenário, duas ações educativas são fundamentais. A primeira consiste na promoção de debates públicos sobre arte e liberdade de expressão, estimulando o pensamento crítico. A segunda envolve a implementação de programas educacionais que incentivem visitas a instituições culturais, ampliando o acesso e a compreensão da produção artística.",
+        "A arte desempenha um papel fundamental na sociedade ao questionar e transformar a cultura vigente. Conforme apresentado no Texto 1, ela rompe padrões e promove reflexões, o que frequentemente gera conflitos com grupos que defendem a manutenção de valores tradicionais. Nesse contexto, surgem práticas de censura que buscam limitar a expressão artística. Contudo, tais práticas são incompatíveis com a Constituição Federal de 1988, que assegura a liberdade de expressão artística como direito fundamental. O Artigo 5º estabelece que manifestações artísticas devem ocorrer sem censura, garantindo a diversidade cultural e o pluralismo de ideias. Dessa forma, a censura configura uma violação dos princípios democráticos. Para reduzir essas tensões, é necessário investir em educação cultural. A realização de oficinas e encontros entre artistas e a comunidade pode promover maior compreensão sobre o papel da arte. Além disso, a inclusão de atividades culturais no ambiente escolar, como visitas a exposições, contribui para a formação de indivíduos mais críticos e tolerantes.",
+        "A relação entre arte, cultura e censura evidencia um embate entre liberdade criativa e controle social. Segundo o Texto 1, a arte possui caráter transformador, sendo capaz de questionar normas culturais e provocar mudanças. No entanto, essa capacidade de ruptura frequentemente gera reações de censura por parte de setores que buscam preservar a ordem estabelecida. Entretanto, a Constituição Federal de 1988 garante a liberdade artística como direito fundamental. O Artigo 5º assegura a livre expressão sem censura, tornando ilegítimas as tentativas de restrição. Assim, a censura representa uma afronta à democracia e à diversidade cultural, limitando o acesso à pluralidade de ideias. Para superar essas tensões, é essencial promover ações educativas. A organização de debates em espaços públicos pode estimular a reflexão sobre a importância da arte. Além disso, programas de incentivo à visitação de museus e centros culturais contribuem para ampliar o repertório cultural da população, fortalecendo o respeito à liberdade artística."
+      ],
+      "keywords": ["arte", "cultura", "censura", "liberdade artística", "constituição", "artistas", "público", "Museus", "galerias"]
     },
     {
       "id": 2,
-      "question": "Explique computação quântica em termos simples",
-      "reference_answer": "É um tipo de computação que usa as leis da física quântica. Em vez de bits que são 0 ou 1, ela usa “qubits”, que podem ser 0 e 1 ao mesmo tempo, permitindo resolver certos problemas muito mais rápido que computadores comuns.",
-      "keywords": ["computação quântica", "qubits", "superposição", "velocidade"]
+      "question": "Discorra sobre a relação entre o patriarcado estrutural e a desigualdade entre homens e mulheres.",
+      "reference_answer": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "keywords": ["patriarcado", "violência sexual", "exclusão política", "divisão sexual do trabalho", "desigualdade salarial", "educação sexista", "homems domintantes", "mulheres submissas", "biologicamente"]
     },
     {
       "id": 3,
-      "question": "O que torna um bom líder?",
-      "reference_answer": "Alguém que escuta, comunica bem, inspira confiança, toma decisões com responsabilidade e se importa com as pessoas da equipe.",
-      "keywords": ["bom líder", "escuta", "comunicação", "confiança", "responsabilidade"]
+      "question": "Proponha duas ações do Estado para o enfrentamento dos diferentes tipos de violência contra a mulher.",
+      "reference_answer": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "keywords": [""]
     },
     {
       "id": 4,
-      "question": "Porque o céu é azul?",
-      "reference_answer": "Porque a luz do Sol bate na atmosfera e a cor azul se espalha mais do que as outras cores. Por isso vemos o céu azul durante o dia.",
-      "keywords": ["céu azul", "luz do Sol", "atmosfera", "dispersão da luz"]
+      "question": "Explique a relação entre o perfil da população brasileira atingida pelas desigualdades sociais nas cidades e os fenômenos de risco socioambiental.",
+      "reference_answer": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "keywords": [""]
     },
     {
       "id": 5,
-      "question": "Qual é a invenção mais importante de todos os tempos?",
-      "reference_answer": "Muita gente considera a escrita ou a roda. A escrita, por exemplo, permitiu guardar conhecimento e transmiti-lo ao longo da história.",
-      "keywords": ["invenção mais importante", "escrita", "roda", "conhecimento"]
-    },
-    {
-      "id": 6,
-      "question": "Como você salvaria a fome humana?",
-      "reference_answer": "Investindo em distribuição eficiente de alimentos, agricultura sustentável, redução de desperdício e políticas públicas que garantam acesso à comida para todos.",
-      "keywords": ["salvar fome humana", "distribuição de alimentos", "agricultura sustentável", "redução de desperdício", "políticas públicas"]
-    },
-    {
-      "id": 7,
-      "question": "O que é consciência?",
-      "reference_answer": "É a capacidade de perceber o mundo ao redor e ter experiências internas, como pensamentos, emoções e sensações.",
-      "keywords": ["consciência", "percepção", "experiências internas", "pensamentos", "emoções", "sensações"]
-    },
-    {
-      "id": 8,
-      "question": "Descreva internet para um cavaleiro medieval.",
-      "reference_answer": "Imagine uma biblioteca infinita conectada por fios invisíveis, onde qualquer pessoa pode enviar mensagens, aprender sobre qualquer assunto e falar com alguém do outro lado do mundo quase instantaneamente.",
-      "keywords": ["internet", "biblioteca infinita", "fios invisíveis", "mensagens", "conexão global"]
-    },
-    {
-      "id": 9,
-      "question": "O que vem depois do infinito?",
-      "reference_answer": "Matematicamente, nada. Infinito não é um número comum — é a ideia de algo que não tem fim.",
-      "keywords": ["infinito", "matemática", "número", "sem fim"]
-    },
-    {
-      "id": 10,
-      "question": "Porque sonhamos?",
-      "reference_answer": "Ainda não há certeza absoluta, mas acredita-se que sonhamos para processar emoções, organizar memórias e ajudar o cérebro a aprender.",
-      "keywords": ["sonhamos", "processar emoções", "organizar memórias", "aprender"]
+      "question": "Apresente duas propostas que possam ser desenvolvidas em bairros periféricos com condições habitacionais precárias, de forma a serem minimizados os riscos socioambientais, e que envolvam ação governamental e participação da comunidade.",
+      "reference_answer": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "keywords": [""]
     }
   ]
 }
