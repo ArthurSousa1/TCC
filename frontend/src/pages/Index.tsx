@@ -1,227 +1,156 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Send, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, GraduationCap, RotateCcw } from "lucide-react";
 
-interface Question {
-  id: number;
-  question: string;
-  reference_answer: string;
-  keywords: string[];
-}
+const QUESTIONS = [
+  "Explique o conceito de polimorfismo na programação orientada a objetos.",
+  "Qual a diferença entre uma pilha e uma fila em estruturas de dados?",
+  "Descreva o funcionamento do protocolo TCP/IP.",
+  "O que é normalização de banco de dados? Cite as formas normais.",
+  "Explique o princípio da conservação de energia.",
+  "Qual a importância do cálculo diferencial na engenharia?",
+  "Descreva a Lei de Ohm e suas aplicações práticas.",
+  "O que são Design Patterns? Dê exemplos.",
+];
 
-function getGradeColor(grade: number) {
-  if (grade >= 9) return "text-grade-excellent";
-  if (grade >= 7) return "text-grade-good";
-  if (grade >= 5) return "text-grade-ok";
-  if (grade >= 3) return "text-grade-bad";
-  return "text-grade-fail";
-}
+const getRandomQuestion = () =>
+  QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+
+const getRandomGrade = () => Math.floor(Math.random() * 11);
+
+const GradeDisplay = ({ grade }: { grade: number }) => {
+  const color =
+    grade >= 6
+      ? "text-success"
+      : grade >= 4
+      ? "text-yellow-500"
+      : "text-destructive";
+
+  return (
+    <div className="flex flex-col items-center gap-2 animate-fade-in">
+      <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        Sua Nota
+      </span>
+      <span className={`text-8xl font-bold ${color}`}>{grade}</span>
+      <span className="text-muted-foreground text-sm">/10</span>
+    </div>
+  );
+};
 
 const Index = () => {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
-  const [question, setQuestion] = useState<Question | null>(null);
+  const [question] = useState(getRandomQuestion);
   const [answer, setAnswer] = useState("");
   const [grade, setGrade] = useState<number | null>(null);
-  const [gradeLabel, setGradeLabel] = useState<string | null>(null);
-  const [isGrading, setIsGrading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Buscar questões da API ao carregar
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/v1/questions');
-        if (!response.ok) throw new Error('Failed to fetch questions');
-        
-        const data = await response.json();
-        const questionsArray = data.data?.questions || [];
-        setQuestions(questionsArray);
-        
-        // Seleciona uma pergunta aleatória
-        if (questionsArray.length > 0) {
-          console.log("Fetched Questions:", questionsArray);
-          const randomQuestion = questionsArray[Math.floor(Math.random() * questionsArray.length)];
-          setQuestion(randomQuestion);
-        }
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-        alert('Erro ao carregar as questões. Verifique se a API está rodando em http://localhost:8000');
-      } finally {
-        setIsLoadingQuestions(false);
-      }
-    };
-
-    fetchQuestions();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!answer.trim() || isGrading || !question) return;
-
-    setIsGrading(true);
-    
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/api/v1/evaluate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          student_answer: answer,
-          question_id: question.id,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to grade");
-      
-      const data = await response.json();
-      console.log("API Response:", data);
-      
-      const score = data.data?.score || 0;
-      const label = data.data?.feedback || "";
-      setGrade(score);
-      setGradeLabel(label);
-      
-    } catch (error) {
-      console.error("Grading error:", error);
-      alert("Erro ao avaliar a resposta. Verifique se a API está rodando em http://localhost:8000");
-      setGrade(0);
-    } finally {
-      setIsGrading(false);
-    }
+  const handleSubmit = () => {
+    if (!answer.trim()) return;
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setGrade(getRandomGrade());
+      setIsSubmitting(false);
+    }, 1200);
   };
 
   const handleReset = () => {
-    setAnswer("");
-    setGrade(null);
-    setGradeLabel(null);
-    
-    // Seleciona uma nova pergunta aleatória
-    if (questions.length > 0) {
-      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-      setQuestion(randomQuestion);
-    }
+    window.location.reload();
   };
 
-  if (isLoadingQuestions) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent"
-        />
-        <p className="mt-4 text-muted-foreground">Carregando questões...</p>
-      </div>
-    );
-  }
-
-  if (!question) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-        <p className="text-center text-lg text-muted-foreground">Nenhuma questão disponível</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-xl"
-      >
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <h1 className="font-mono text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            QuestIA
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="bg-primary py-4 px-6 shadow-md">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
+          <GraduationCap className="h-8 w-8 text-primary-foreground" />
+          <h1 className="text-xl font-bold text-primary-foreground tracking-wide">
+            Portal Acadêmico
           </h1>
         </div>
+      </header>
 
-        {/* Question Card */}
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-          <p className="mb-1 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Pergunta
-          </p>
-          <h2 className="mb-8 text-2xl font-bold leading-tight text-card-foreground">
-            {question.question}
-          </h2>
+      {/* Blue accent bar */}
+      <div className="h-1 bg-secondary" />
 
-          <AnimatePresence mode="wait">
-            {grade === null ? (
-              <motion.form
-                key="form"
-                onSubmit={handleSubmit}
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Escreva sua resposta aqui..."
-                  rows={4}
-                  className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <button
-                  type="submit"
-                  disabled={!answer.trim() || isGrading}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isGrading ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+      {/* Main */}
+      <main className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-2xl">
+          <div className="bg-card rounded-lg shadow-lg overflow-hidden border-t-4 border-t-secondary">
+            {/* Card header */}
+            <div className="bg-primary px-6 py-4">
+              <h2 className="text-primary-foreground font-semibold text-lg">
+                Avaliação
+              </h2>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Question */}
+              <div className="space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Questão
+                </span>
+                <p className="text-foreground text-lg font-medium leading-relaxed">
+                  {question}
+                </p>
+              </div>
+
+              {grade === null ? (
+                <>
+                  {/* Answer area */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Sua Resposta
+                    </span>
+                    <Textarea
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      placeholder="Digite sua resposta aqui..."
+                      className="min-h-[150px] resize-none text-base focus-visible:ring-secondary"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  {/* Submit */}
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={!answer.trim() || isSubmitting}
+                      className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-2 px-6"
                     >
-                      <Send className="h-5 w-5" />
-                    </motion.div>
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                  {isGrading ? "Avaliando..." : "Enviar Resposta"}
-                </button>
-              </motion.form>
-            ) : (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, type: "spring", bounce: 0.4 }}
-                className="text-center"
-              >
-                <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Sua nota é 
-                </p>
-                <motion.p
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-                  className={`font-mono text-8xl font-bold ${getGradeColor(grade)}`}
-                >
-                  {grade}
-                </motion.p>
-                <p className="mt-1 font-mono text-sm text-muted-foreground">/10</p>
-                <p className={`mt-3 text-lg font-semibold ${getGradeColor(grade)}`}>
-                  {gradeLabel}
-                </p>
-
-                <div className="mt-6 rounded-xl border border-border bg-background p-4">
-                  <p className="text-sm italic text-muted-foreground">
-                    "{answer}"
-                  </p>
+                      {isSubmitting ? (
+                        <div className="h-4 w-4 border-2 border-secondary-foreground/30 border-t-secondary-foreground rounded-full animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      {isSubmitting ? "Corrigindo..." : "Enviar Resposta"}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                /* Grade result */
+                <div className="flex flex-col items-center gap-6 py-8">
+                  <GradeDisplay grade={grade} />
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    className="gap-2 border-secondary text-secondary hover:bg-secondary/10"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Nova Questão
+                  </Button>
                 </div>
-
-                <button
-                  onClick={handleReset}
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-6 py-3 font-semibold text-secondary-foreground transition-all hover:opacity-80"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Tente Outra
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </div>
+          </div>
         </div>
-      </motion.div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-primary py-3 text-center">
+        <p className="text-primary-foreground/60 text-sm">
+          Portal Acadêmico © 2026
+        </p>
+      </footer>
     </div>
   );
 };

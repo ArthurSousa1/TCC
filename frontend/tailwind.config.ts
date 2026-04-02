@@ -13,10 +13,6 @@ export default {
       },
     },
     extend: {
-      fontFamily: {
-        sans: ["Space Grotesk", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -51,12 +47,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        grade: {
-          excellent: "hsl(var(--grade-excellent))",
-          good: "hsl(var(--grade-good))",
-          ok: "hsl(var(--grade-ok))",
-          bad: "hsl(var(--grade-bad))",
-          fail: "hsl(var(--grade-fail))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -83,10 +76,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0", transform: "scale(0.9)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.5s ease-out",
       },
     },
   },
