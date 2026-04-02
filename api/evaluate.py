@@ -1,8 +1,10 @@
+import csv
 import re
 import numpy as np
 
 from sklearn.metrics.pairwise import cosine_similarity
 from helpers import _questions, get_model, load_grade_prediction_model, concatanate_feedback, normalize_text
+from mock_test import _answers
 
 ### Done - All steps defined
 def evaluate_answer(student_answer, question_id: int):
@@ -142,25 +144,24 @@ def extract_features(student_answer, base_answer, similarity):
         student_sentences,
     ]])
 
+def test_evaluate_answer():
+    csv_path = 'api/results.csv'
+    with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+    
+        # Cabeçalho do CSV
+        writer.writerow(['question_id', 'answer', 'original_grade', 'evaluated_grade'])
+            
+        for id in _answers.get('answers', []):
+            respostas = id.get('answers')
 
-(print ("=====================primeiro exemplo====================="))
-(print ("nota esperada: 7,5"))
-(print ("Nota atribuida: ", evaluate_answer("A arte é um resultado cultural, independente da situação em que a cultura se encontra, a arte resiste. São as sátiras em momentos de censura, o canto de escravos, os livros cheios de metáforas. A arte é expressão natural do ser humano, limitar ela, é limitar nossa existência. Precisamos introduzir a oportunidade de experienciar a arte para todos os cidadãos, através do desenvolvimento de politicas para ingressos para eventos de artes, aulas de artes acessivéis a todos, a valorização do artista como profissional..", 1)))
+            for resposta in respostas:
+                answer = resposta.get('answer')
+                resultado = evaluate_answer(answer, id.get('id'))
+                grade = resposta.get('grade')
+                writer.writerow([id.get('id'), answer, grade, resultado.get('score')])       
 
-(print ("=====================segundo exemplo====================="))
-(print ("nota esperada: 0"))
-(print ("Nota atribuida: ", evaluate_answer("A arte fala muito sobre o que há dentro de nós.", 1)))
-
-(print ("=====================terceiro exemplo====================="))
-(print ("nota esperada: 9,0"))
-(print ("Nota atribuida: ", evaluate_answer("A arte é uma forma de expressão, de mostrar o que sente, protesto e principalmente liberdade, ela é um presente de todos está presente na constituição, entretando, quandoa liberdade é censurada, por consequência, a arte é censurada. Duas ações educativas seria a primeira maior divulgação das formas artísticas que temos hoje em dia, e a segunda levar ou incentivar pessoas, principalmente crianças, a conhecer ou participar de diversas formas de arte.", 1)))
-
-(print ("=====================quarto exemplo====================="))
-(print ("nota esperada: 5,0"))
-(print ("Nota atribuida: ", evaluate_answer("Partindo do princípio que todo cidadão brasileiro, constitucionalmente, tem garantido o direito de liberdade de expressão, a cultura tende a ser mal vista perante essa tal liberdade. Contudo, existem certos limites que não devem ser cruzados. Segundo a fala popular que diz 'a sua liberdade não pode ser tamanha ao ponto de tirar a liberdade do outro', deixa claro que é essencial o poder da liberdade, mas até certo ponto. Um brasilieiro que foi muito atacado, chegando até a ser exilado do país, apresenta uma ideia de um partido nazista, utilizando como argumento a liberdade de expressão. O regime nazista tem como principal ideologia a soberania de uma classe ariana, que vai contra, e nesse contexto, acredita-se que a censura e cultura devem repudiar isso.", 1)))
-
-(print ("=====================quinto exemplo====================="))
-(print ("nota esperada: 10,0"))
-(print ("Nota atribuida: ", evaluate_answer("A arte, ao tensionar a cultura e questionar valores estabelecidos, exerce papel essencial na transformação social. Conforme exposto no Texto 1, ela atua como elemento de ruptura, reorganizando significados e desafiando padrões dominantes. Essa característica, no entanto, frequentemente gera reações de censura por parte de grupos que interpretam tais manifestações como ameaças à ordem cultural. Todavia, a Constituição Federal de 1988 assegura a liberdade artística como direito fundamental. O inciso IX do Artigo 5º garante a livre expressão intelectual e artística sem censura, o que torna ilegítimas quaisquer tentativas de restrição. Assim, a censura representa não apenas um retrocesso democrático, mas também uma limitação ao pluralismo cultural. Diante disso, a educação surge como ferramenta essencial. A realização de encontros entre artistas e estudantes em ambientes escolares favorece o diálogo e a compreensão da arte. Ademais, projetos de acesso a espaços culturais, como museus e galerias, ampliam o repertório cultural da população, contribuindo para a valorização da liberdade artística.", 1)))
+    print("CSV gerado com sucesso!")
 
 
+test_evaluate_answer()
