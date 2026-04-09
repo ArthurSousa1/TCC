@@ -54,7 +54,8 @@ const Index = () => {
         if (questionsArray.length > 0) {
           console.log("Fetched Questions:", questionsArray);
           const randomQuestion = questionsArray[Math.floor(Math.random() * questionsArray.length)];
-          setQuestion(randomQuestion);
+          const questionToSet = questionsArray.at(-1);
+          setQuestion(questionToSet);
         }
       } catch (error) {
         console.error('Error fetching questions:', error);
@@ -142,7 +143,7 @@ const Index = () => {
         <div className="max-w-4xl mx-auto flex items-center gap-3">
           <GraduationCap className="h-8 w-8 text-primary-foreground" />
           <h1 className="text-xl font-bold text-primary-foreground tracking-wide">
-            Portal Acadêmico
+            QuestIA
           </h1>
         </div>
       </header>
@@ -226,7 +227,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-primary py-3 text-center">
         <p className="text-primary-foreground/60 text-sm">
-          Portal Acadêmico © 2026
+          QuestIA © 2026
         </p>
       </footer>
     </div>

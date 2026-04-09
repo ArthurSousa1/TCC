@@ -59,6 +59,15 @@
         "Para enfrentar essa situação é necessário investir em políticas públicas de urbanização e saneamento básico e desenvolver ações participativas com a comunidade, como educação ambiental e planejamento urbano colaborativo, visando à redução dos riscos."
       ],
       "keywords": ["infraestrutura urbana", "saneamento básico", "drenagem", "contenção de encostas", "áreas de risco", "políticas públicas", "urbanização", "educação ambiental", "participação da comunidade", "redução de riscos socioambientais"]
+    },
+    {
+      "id": 6,
+      "question": "O que é ética?",
+      "reference_answer": [
+        "Ética é um ramo da filosofia que estuda os princípios morais que governam nossas decisões e comportamentos.",
+        "Exemplo de respota top aqui"
+      ],
+      "keywords": ["keyword1", "keyword2"]
     }
   ]
 }
