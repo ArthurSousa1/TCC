@@ -27,7 +27,7 @@ for col in colunas_notas:
 
 # 3. FILTRO: Selecionar apenas notas originais entre 0.3 e 0.75
 # O símbolo '&' significa 'e' (ambas as condições devem ser verdadeiras)
-df_filtrado = df[(df['nota_original'] >= 0.0) & (df['nota_original'] <= 1.0)].dropna()
+df_filtrado = df[(df['nota_original'] >= 0.5) & (df['nota_original'] <= 1.0)].dropna()
 
 print(f"Total de linhas encontradas no intervalo [0.3 - 0.75]: {len(df_filtrado)}")
 
