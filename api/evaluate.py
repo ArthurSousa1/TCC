@@ -44,7 +44,7 @@ def evaluate_answer(student_answer, question_id: int):
             "feedback": "Nenhuma palavra-chave encontrada, revise os conceitos e tente novamente."
         }
     
-    semantic_similarity_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answers, clean_student_answer)
+    semantic_similarity_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answers, clean_student_answer, keywords)
     final_score = (0.40*keywords_score) + (0.60*semantic_similarity_score)
     formatted_score = round(final_score, 2)
     
@@ -90,7 +90,7 @@ def validate_keywords(keywords, student_answer):
     return keyword_score, missing_keywords
 
 ### Under development
-def validate_semantic_similarity(reference_answers, student_answer):
+def validate_semantic_similarity(reference_answers, student_answer, keywords=None):
     # Carrega o modelo semântico
     tokenizer, model = get_model()
     similarity = []
@@ -108,18 +108,18 @@ def validate_semantic_similarity(reference_answers, student_answer):
     # similarity_score = max(similarity) * 10 
 
     # Usa modelo treinado para prever a grade
-    score_final = predict_grade(student_answer, reference_answer, max(similarity))
+    score_final = predict_grade(student_answer, reference_answer, max(similarity), keywords)
     return score_final, "feedback do que ficou faltando para melhorar a nota"
 
 ### Under development
-def predict_grade(student_answer, base_answer, similarity):
+def predict_grade(student_answer, base_answer, similarity, keywords=None):
     grade_predictor, grade_scaler = load_grade_prediction_model()
     
     if grade_predictor is None or grade_scaler is None:
         raise RuntimeError("Modelo de predição de grades não encontrado. Execute o treinamento e salve o modelo antes de avaliar.")
     
     try:
-        features = extract_features(student_answer, base_answer, similarity)
+        features = extract_features(student_answer, base_answer, similarity, keywords)
         features_scaled = grade_scaler.transform(features)
         predicted_grade = grade_predictor.predict(features_scaled)[0]
         return np.clip(float(predicted_grade), 0.0, 1.0)
@@ -128,30 +128,52 @@ def predict_grade(student_answer, base_answer, similarity):
         raise
 
 ### Under development
-def extract_features(student_answer, base_answer, similarity):
-
-    student_words = len(student_answer.split()) if student_answer else 0
+def extract_features(student_answer, base_answer, similarity, keywords=None):
+    # Word counts
+    student_tokens = student_answer.split()
+    student_words = len(student_tokens) if student_answer else 0
     base_words = len(base_answer.split()) if base_answer else 0
-    # Contar sentenças com pontuação básica
+
+    # Sentence counts
     student_sentences = max(1, len([s for s in re.split(r"[\.\!?]+", student_answer) if s.strip()]))
     
+    # Length ratio
     length_ratio = student_words / base_words if base_words > 0 else 0
-    
+
+    # Keyword overlap
+    keyword_ratio = 0
+    if keywords and student_answer:
+        found = 0
+        for kw in keywords:
+            if kw.lower() in student_answer.lower():
+                found += 1
+        keyword_ratio = found / len(keywords)
+
+    # Avg word length
+    avg_word_len = np.mean([len(w) for w in student_tokens]) if student_tokens else 0
+
+    # Punctuation density
+    punct_count = len(re.findall(r'[^\w\s]', student_answer))
+    punct_density = punct_count / len(student_answer) if student_answer else 0
+
     return np.array([[
         similarity,
         length_ratio,
         student_words,
         student_sentences,
+        keyword_ratio,
+        avg_word_len,
+        punct_density
     ]])
 
 def test_evaluate_answer():
     csv_path = 'api/results.csv'
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
-    
+
         # Cabeçalho do CSV
         writer.writerow(['question_id', 'answer', 'original_grade', 'evaluated_grade'])
-            
+
         for id in _answers.get('answers', []):
             respostas = id.get('answers')
 
@@ -159,9 +181,9 @@ def test_evaluate_answer():
                 answer = resposta.get('answer')
                 resultado = evaluate_answer(answer, id.get('id'))
                 grade = resposta.get('grade')
-                writer.writerow([id.get('id'), answer, grade, resultado.get('score')])       
+                writer.writerow([id.get('id'), answer, grade, resultado.get('score')])
 
     print("CSV gerado com sucesso!")
 
-
-test_evaluate_answer()
+if __name__ == "__main__":
+    test_evaluate_answer()
