@@ -28,7 +28,7 @@ print("Modelo de IA será carregado na primeira requisição de avaliação...")
 def get_model():
     global _tokenizer, _bert_model
     if _tokenizer is None or _bert_model is None:
-        model_name = "bert-base-multilingual-cased"
+        model_name = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
         _tokenizer = AutoTokenizer.from_pretrained(model_name)
         _bert_model = AutoModel.from_pretrained(model_name)
     return _tokenizer, _bert_model

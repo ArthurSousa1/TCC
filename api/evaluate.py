@@ -44,8 +44,8 @@ def evaluate_answer(student_answer, question_id: int):
             "feedback": "Nenhuma palavra-chave encontrada, revise os conceitos e tente novamente."
         }
     
-    semantic_similarity_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answers, clean_student_answer, keywords)
-    final_score = (0.40*keywords_score) + (0.60*semantic_similarity_score)
+    # We use the ML model as the primary grader, it already considers keywords, similarity and length
+    final_score, semantic_similarity_feedback = validate_semantic_similarity(clean_reference_answers, clean_student_answer, keywords)
     formatted_score = round(final_score, 2)
     
     return {

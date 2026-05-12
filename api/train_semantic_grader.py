@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import json
 import re
-from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.model_selection import train_test_split, KFold, cross_val_score, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import Ridge
@@ -206,14 +206,35 @@ def train_model(data_path):
     X_scaled = scaler.fit_transform(X)
 
     # =========================
-    # MODELS COMPARISON
+    # MODELS COMPARISON & TUNING
     # =========================
-    print("\n🏋️ Avaliando modelos com Cross-Validation (K-Fold)...")
+    print("\n🏋️ Otimizando modelos com GridSearchCV...")
     
+    # Grid search for Random Forest
+    rf_params = {
+        'n_estimators': [100, 200],
+        'max_depth': [10, 20, None],
+        'min_samples_split': [2, 5]
+    }
+    
+    gs_rf = GridSearchCV(RandomForestRegressor(random_state=42), rf_params, cv=3, scoring='r2', n_jobs=-1)
+    gs_rf.fit(X_scaled, y)
+    best_rf = gs_rf.best_estimator_
+    
+    # Grid search for Gradient Boosting
+    gb_params = {
+        'n_estimators': [100, 200],
+        'learning_rate': [0.05, 0.1],
+        'max_depth': [3, 5]
+    }
+    gs_gb = GridSearchCV(GradientBoostingRegressor(random_state=42), gb_params, cv=3, scoring='r2', n_jobs=-1)
+    gs_gb.fit(X_scaled, y)
+    best_gb = gs_gb.best_estimator_
+
     models = {
         "Ridge": Ridge(),
-        "RandomForest": RandomForestRegressor(n_estimators=200, max_depth=12, random_state=42),
-        "GradientBoosting": GradientBoostingRegressor(n_estimators=200, learning_rate=0.1, max_depth=5, random_state=42)
+        "RandomForest_Tuned": best_rf,
+        "GradientBoosting_Tuned": best_gb
     }
 
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
